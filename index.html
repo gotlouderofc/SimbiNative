@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>Simbi</title>
+    <!-- PWA configuration -->
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="theme-color" content="#538221" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Simbi" />
+    <link rel="apple-touch-icon" href="/icon.png" />
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js')
+            .then((reg) => console.log('Simbi service worker registered:', reg.scope))
+            .catch((err) => console.error('Simbi service worker registration failed:', err));
+        });
+      }
+
+      // Restrict multi-pinch gesture zoom for standalone PWA immersion
+      document.addEventListener('touchstart', (event) => {
+        if (event.touches.length > 1) {
+          event.preventDefault();
+        }
+      }, { passive: false });
+
+      // Restrict accidental double-tap-to-zoom
+      let lastGestureTime = 0;
+      document.addEventListener('touchend', (event) => {
+        const currentTime = new Date().getTime();
+        if (currentTime - lastGestureTime <= 300) {
+          event.preventDefault();
+        }
+        lastGestureTime = currentTime;
+      }, false);
+
+      // Prevent native Safari gesture-based zooming mechanics
+      document.addEventListener('gesturestart', (event) => {
+        event.preventDefault();
+      });
+      document.addEventListener('gesturechange', (event) => {
+        event.preventDefault();
+      });
+
+      // Prevent Ctrl + scroll zoom on desktops
+      document.addEventListener('wheel', (event) => {
+        if (event.ctrlKey || event.metaKey) {
+          event.preventDefault();
+        }
+      }, { passive: false });
+
+      // Block key combination shortcuts for browser scaling (Ctrl +/-/0)
+      document.addEventListener('keydown', (event) => {
+        if ((event.ctrlKey || event.metaKey) && (event.key === '=' || event.key === '-' || event.key === '+' || event.key === '0')) {
+          event.preventDefault();
+        }
+      });
+    </script>
+  </body>
+</html>
+
